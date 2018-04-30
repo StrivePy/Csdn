@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import logging
 from Csdn.items import CsdnItem
+
+logger = logging.getLogger(__name__)
 
 
 class CsdnblogSpider(scrapy.Spider):
