@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import logging
 from Csdn.items import CsdnItem
-
-logger = logging.getLogger(__name__)
+from Csdn.items import CsdnItemLoader
+from scrapy.loader.processors import MapCompose, TakeFirst
 
 
 class CsdnblogSpider(scrapy.Spider):
@@ -12,20 +11,16 @@ class CsdnblogSpider(scrapy.Spider):
     start_urls = ['http://blog.csdn.net/oscer2016/article/details/78007472']
 
     def parse(self, response):
-        item = CsdnItem()
+        l = CsdnItemLoader(item=CsdnItem(), response=response)
         # 文章url
-        url = response.url
+        l.add_value('url', response.url)
         # 文章标题
-        title = response.xpath('//*[@id="mainBox"]//h6/text()').extract_first()
+        l.add_xpath('title', '//*[@id="mainBox"]//h6/text()')
         # 文章作者
-        author = response.xpath('//*[@id="uid"]/text()').extract_first()
+        l.add_xpath('author', '//*[@id="uid"]/text()', MapCompose(str.upper))
         # 文章发行时间
-        release_time = response.xpath('//*[@id="mainBox"]//span[@class="time"]/text()').extract_first()
+        l.add_xpath('releasetime', '//*[@id="mainBox"]//span[@class="time"]/text()')
         # 文章内容
-        content = response.xpath('//*[@id="article_content"]').xpath('string(.)').extract_first()
-        for field in item.fields:
-            try:
-                item[field] = eval(field)
-            except NameError:
-                logger.error('name %s is not defined', field)
-        yield item
+        # l.add_xpath('content', '//*[@id="article_content"]'.xpath('string(.)'))
+        litem = l.load_item()
+        yield litem
